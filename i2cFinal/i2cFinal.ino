@@ -1,5 +1,12 @@
-#include <Pixy2.h>
-#include <Wire.h>
+//SETUP THE DEVICES
+
+//plug sda on RoboRIO into A4
+//plug scl on RoboRIO into A5
+//connect the two grounds
+
+
+#include <Pixy2.h>      //this is provided by the pixy creators, you will have to go to the arduino sketch editor,
+#include <Wire.h>       //built in class from arduino, strongly suggest looking at it on their website
 #include <FastLED.h>
 
 #define LED_PIN     7
@@ -8,30 +15,12 @@
 Pixy2 pixy;
 CRGB leds[NUM_LEDS];
 
-//built in class from arduino, strongly suggest looking at it on their website
-//it is not a complicated class
-
-
-
-//this is provided by the pixy creators, you will have to go to the arduino sketch editor,
-//click sketch, include library, and import the pixy .zip files
-
-//SETUP THE DEVICES
-
-//plug sda on RoboRIO into A4
-//plug scl on RoboRIO into A5
-//connect the two grounds
-
-
 String piOutput = String(0);//string to be sent to the robot
 String input = "blank";  //string received from the robot
 const String PIXY = "pi";
-int center;
+
 int error;
-long time;
-long delayTime;
-int x0;
-int x1;
+
 void setup() {
   Serial.begin(115200);
   Serial.println("setup");
@@ -39,11 +28,9 @@ void setup() {
   Wire.onReceive(receiveEvent); // Registers a function to be called when a slave device receives a transmission from a master
   Wire.onRequest(requestEvent); // Register a function to be called when a master requests data from this slave device
   FastLED.addLeds<WS2812, LED_PIN, GRB>(leds, NUM_LEDS);
-
   pixy.init();
-
-
-  for (int i = 0; i < 92; i++)
+  
+  for (int i = 0; i < 92; i++)    //Powers on all LEDs and sets them to green
   {
     leds[i] = CRGB(0, 200, 0);
     FastLED.show();
@@ -52,9 +39,8 @@ void setup() {
 }
 
 void loop() {
-
   uint16_t blocks = pixy.ccc.getBlocks();//use this line to get every available object the pixy sees
-  //^^^not sure what exactly this is for, honestly
+  //^^^unsigned 16 bit integer 
   pixy.ccc.getBlocks();
   int Lclosest = 0;
   int Lclosestdiffs = 1000;
@@ -63,7 +49,7 @@ void loop() {
 
   if (blocks < 2)
   {
-    piOutput = String(-1); //if no blocks tell roborio there are none
+    piOutput = String(-9999); //if less than 2 blocks, output -9999
   }
   else
   {
@@ -71,8 +57,8 @@ void loop() {
       if (pixy.ccc.blocks[i].m_x > pixy.frameWidth / 2) {
         continue;
       }
-      int diff = (pixy.frameWidth / 2) - pixy.ccc.blocks[i].m_x;
-      if (diff < Lclosestdiffs) {
+      int diff = (pixy.frameWidth / 2) - pixy.ccc.blocks[i].m_x;    //
+      if (diff > Lclosestdiffs) {
         Lclosest = i;
         Lclosestdiffs = diff;
       }
@@ -82,26 +68,17 @@ void loop() {
         continue;
       }
       int diff = (pixy.ccc.blocks[i].m_x - pixy.frameWidth / 2);
-      if (diff < Rclosestdiffs) {
+      if (diff > Rclosestdiffs) {
         Rclosest = i;
         Rclosestdiffs = diff;
       }
     }
-    center =  pixy.frameWidth / 2 - ((pixy.ccc.blocks[Rclosest].m_x) + (pixy.ccc.blocks[Lclosest].m_x) / 2);
-    piOutput = center;
+    error =  pixy.frameWidth / 2 - ((pixy.ccc.blocks[Rclosest].m_x + pixy.ccc.blocks[Lclosest].m_x) / 2);
+    piOutput = error;
   }
 
 
   delay(70); //gives time for everything to process
-  time = millis();
-  if (time > delayTime)
-  {
-    Serial.println(piOutput);
-    Serial.print("Number of Blocks: ");
-    Serial.println(blocks);
-    delayTime = time + 50;
-  }
-
 }
 
 void requestEvent() { //called when RoboRIO request a message from this device
