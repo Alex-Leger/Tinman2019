@@ -15,8 +15,7 @@ import frc.robot.Robot;
  */
 public class FourBarCheck extends Command {
     private boolean fourbardown = false;
-    private int time = 0;
-    private int delayTime = 1000;
+    private boolean newPress = true;
 
     public FourBarCheck() {
         requires(Robot.m_fourbar);
@@ -24,11 +23,15 @@ public class FourBarCheck extends Command {
 
     @Override
     protected void execute() {
-        if (Robot.m_oi.getLBumper() && time > delayTime) {
-            fourbardown = !fourbardown;
-            delayTime = time + 1000;
-        }
-        time = time + 20;
+        if (Robot.m_oi.getLBumper()) {
+            if(newPress){                     
+                fourbardown = !fourbardown;
+                newPress = false;
+            }
+        } 
+        else
+            newPress = true;
+        
         Robot.m_fourbar.toggleFourBar(fourbardown);
     }
 
