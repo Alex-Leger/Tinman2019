@@ -35,7 +35,7 @@ public class PixyMode extends Command {
   protected void execute() {
     pkt = i2c.getPixy();
     SmartDashboard.putNumber("error", pkt.error);
-    if (pkt.error != -1) {// if data is exist
+    if (pkt.error != -9999) {// if data is exist
       SmartDashboard.putString("Turning", "yes");
 
       error = pkt.error;
